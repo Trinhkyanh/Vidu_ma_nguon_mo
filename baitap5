@@ -1,0 +1,61 @@
+import sys
+import numpy as np
+from scipy.fft import fft
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
+
+
+class SignalProcessingApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Signal Processing App")
+        self.setGeometry(100, 100, 800, 600)
+
+        self.central_widget = QWidget(self)
+        self.setCentralWidget(self.central_widget)
+
+        self.layout = QVBoxLayout(self.central_widget)
+
+        # Tạo nút để thực hiện xử lý tín hiệu và hiển thị đồ thị
+        self.process_button = QPushButton("Xử lý tín hiệu", self)
+        self.process_button.clicked.connect(self.process_signal)
+        self.layout.addWidget(self.process_button)
+
+        # Tạo canvas để hiển thị đồ thị
+        self.figure, self.ax = plt.subplots()
+        self.canvas = FigureCanvas(self.figure)
+        self.layout.addWidget(self.canvas)
+
+    def process_signal(self):
+        fs = 1000  # Tần số lấy mẫu (Hz)
+        t = np.arange(0, 1, 1/fs)  # Thời gian từ 0 đến 1 giây
+        f_square = 5  # Tần số sóng vuông (Hz)
+        signal = np.sign(np.sin(2 * np.pi * f_square * t))
+
+        # Thực hiện phép biến đổi Fourier
+        fft_result = fft(signal)
+        freq = np.fft.fftfreq(len(t), 1/fs)
+
+        # Xóa đồ thị cũ và vẽ đồ thị mới
+        self.ax.clear()
+        self.ax.plot(t, signal)
+        self.ax.set_title('Tín hiệu hình vuông')
+
+        # Vẽ đồ thị Biến đổi Fourier
+        self.ax.figure.subplots_adjust(bottom=0.2)
+        self.ax.figure.subplots_adjust(right=0.8)
+        cax = self.ax.figure.add_axes([0.85, 0.2, 0.05, 0.7])
+        self.ax.plot(freq, np.abs(fft_result))
+        self.ax.set_title('Biến đổi Fourier')
+        self.ax.set_xlabel('Tần số (Hz)')
+
+        self.canvas.draw()
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    main_app = SignalProcessingApp()
+    main_app.show()
+    sys.exit(app.exec_())
